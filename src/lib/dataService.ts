@@ -315,6 +315,35 @@ export async function deleteJob(jobId: string): Promise<void> {
   }
 }
 
+export async function reassignJob(
+  jobId: string,
+  techId: string,
+  techName: string,
+  currentUser?: { uid: string; fullName: string }
+): Promise<void> {
+  const path = `${JOBS_COL}/${jobId}`;
+  try {
+    const docRef = doc(db, JOBS_COL, jobId);
+    await updateDoc(docRef, {
+      assignedTechId: techId,
+      assignedTechName: techName,
+    });
+
+    const actorName = currentUser ? currentUser.fullName : "System";
+    await addJobComment(jobId, {
+      id: `system-log-reassign-${Date.now()}`,
+      jobId,
+      authorId: currentUser?.uid || "system",
+      authorName: actorName,
+      authorRole: "sup_admin",
+      text: `👥 Reassigned ticket to: ${techName}`,
+      createdAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, path);
+  }
+}
+
 export function subscribeJobs(callback: (jobs: Job[]) => void): Unsubscribe {
   const q = query(collection(db, JOBS_COL), orderBy("createdAt", "desc"));
   return onSnapshot(
@@ -328,6 +357,26 @@ export function subscribeJobs(callback: (jobs: Job[]) => void): Unsubscribe {
     },
     (error) => {
       handleFirestoreError(error, OperationType.LIST, JOBS_COL);
+    }
+  );
+}
+
+export function subscribeEmployees(callback: (employees: Employee[]) => void): Unsubscribe {
+  const q = collection(db, EMPLOYEES_COL);
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const list: Employee[] = [];
+      snapshot.forEach((doc) => {
+        list.push({
+          status: "active",
+          ...doc.data() as Employee,
+        });
+      });
+      callback(list);
+    },
+    (error) => {
+      handleFirestoreError(error, OperationType.LIST, EMPLOYEES_COL);
     }
   );
 }

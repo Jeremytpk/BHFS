@@ -3,6 +3,7 @@ import {
   Building2, 
   Key, 
   User, 
+  Users,
   Sparkles, 
   ShieldCheck, 
   ChevronRight, 
@@ -22,7 +23,9 @@ import {
   fetchBranches, 
   fetchEmployees, 
   subscribeJobs,
-  registerUserAndEmployee
+  registerUserAndEmployee,
+  subscribeEmployees,
+  updateEmployee
 } from "./lib/dataService";
 
 import Sidebar from "./components/Sidebar";
@@ -103,6 +106,17 @@ export default function App() {
             alert("Your account state is currently PENDING system administrator approval.");
             return;
           }
+          
+          // Mark online if not already online
+          if (!fresh.isOnline) {
+            try {
+              await updateEmployee(fresh.uid, { isOnline: true });
+              fresh.isOnline = true;
+            } catch (err) {
+              console.warn("Could not mark employee online on session restore:", err);
+            }
+          }
+          
           setCurrentUser(fresh);
           // Sync freshest details to localStorage as well
           localStorage.setItem("bhfs_current_user", JSON.stringify(fresh));
@@ -137,6 +151,33 @@ export default function App() {
     return () => unsub();
   }, [currentUser]);
 
+  // Subscribe to real-time employees list
+  useEffect(() => {
+    if (!currentUser) return;
+    const unsub = subscribeEmployees((freshEmployees) => {
+      setEmployees(freshEmployees);
+    });
+    return () => unsub();
+  }, [currentUser]);
+
+  // Synchronize currentUser with freshest employee record in real-time
+  useEffect(() => {
+    if (!currentUser) return;
+    const fresh = employees.find((e) => e.uid === currentUser.uid);
+    if (fresh) {
+      if (
+        fresh.isOnline !== currentUser.isOnline ||
+        fresh.isOnBreak !== currentUser.isOnBreak ||
+        fresh.fullName !== currentUser.fullName ||
+        fresh.phone !== currentUser.phone ||
+        fresh.hourlyRate !== currentUser.hourlyRate
+      ) {
+        setCurrentUser(fresh);
+        localStorage.setItem("bhfs_current_user", JSON.stringify(fresh));
+      }
+    }
+  }, [employees, currentUser]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!loginEmail || !loginPassword) {
@@ -164,6 +205,15 @@ export default function App() {
       }
 
       setLoginError("");
+
+      // Mark user online on login
+      try {
+        await updateEmployee(matched.uid, { isOnline: true });
+        matched.isOnline = true;
+      } catch (err) {
+        console.warn("Could not mark employee online on active login:", err);
+      }
+
       setCurrentUser(matched);
       localStorage.setItem("bhfs_current_user", JSON.stringify(matched));
       
@@ -247,13 +297,33 @@ export default function App() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    if (currentUser) {
+      try {
+        await updateEmployee(currentUser.uid, { isOnline: false });
+      } catch (err) {
+        console.warn("Could not mark employee offline on logout:", err);
+      }
+    }
     setCurrentUser(null);
     localStorage.removeItem("bhfs_current_user");
   };
 
   // Developer Swapper handle
-  const handleSwapUser = (user: Employee) => {
+  const handleSwapUser = async (user: Employee) => {
+    if (currentUser && currentUser.uid !== user.uid) {
+      try {
+        await updateEmployee(currentUser.uid, { isOnline: false });
+      } catch (e) {
+        console.warn("Could not mark old user offline during swap:", e);
+      }
+    }
+    try {
+      await updateEmployee(user.uid, { isOnline: true });
+      user.isOnline = true;
+    } catch (e) {
+      console.warn("Could not mark new user online during swap:", e);
+    }
     setCurrentUser(user);
     localStorage.setItem("bhfs_current_user", JSON.stringify(user));
     if (user.role === "employee") {
@@ -546,6 +616,54 @@ export default function App() {
             </div>
             
             <div className="flex items-center gap-4">
+              {currentUser.role === "employee" && (
+                <div id="break-controls-header" className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3 py-1 rounded-lg">
+                  {currentUser.isOnBreak ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-semibold text-amber-600 animate-pulse flex items-center gap-1.5">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                        </span>
+                        On Break ☕
+                      </span>
+                      <button
+                        id="btn-resume-work"
+                        onClick={async () => {
+                          try {
+                            await updateEmployee(currentUser.uid, { isOnBreak: false, breakStartedAt: "" });
+                            setCurrentUser(prev => prev ? { ...prev, isOnBreak: false, breakStartedAt: "" } : null);
+                          } catch (e) {
+                            console.error("Failed to end break", e);
+                          }
+                        }}
+                        className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-bold transition-all shadow-xs cursor-pointer"
+                      >
+                        Resume Work
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-semibold text-slate-500">Ready to Dispatch</span>
+                      <button
+                        id="btn-take-break"
+                        onClick={async () => {
+                          try {
+                            const nowStr = new Date().toISOString();
+                            await updateEmployee(currentUser.uid, { isOnBreak: true, breakStartedAt: nowStr });
+                            setCurrentUser(prev => prev ? { ...prev, isOnBreak: true, breakStartedAt: nowStr } : null);
+                          } catch (e) {
+                            console.error("Failed to start break", e);
+                          }
+                        }}
+                        className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded text-[10px] font-bold transition-all shadow-xs flex items-center gap-1 cursor-pointer"
+                      >
+                        Take Break ☕
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="hidden sm:flex items-center gap-1.5 bg-green-50/50 border border-green-200 px-2 py-0.5 rounded text-[10px] text-green-700 font-mono uppercase tracking-wide font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
                 <span>Cloud Network Online</span>
@@ -603,12 +721,17 @@ export default function App() {
                         <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">
                           Technicians Onsite
                         </span>
-                        <span className="text-2xl font-bold font-mono tracking-tight text-slate-800">
-                          {employees.length}
-                        </span>
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-2xl font-bold font-mono tracking-tight text-slate-800">
+                            {employees.filter(e => e.role === "employee").length}
+                          </span>
+                          <span className="text-xs font-semibold text-emerald-600 font-mono">
+                            ● {employees.filter(e => e.role === "employee" && e.isOnline).length} Online
+                          </span>
+                        </div>
                       </div>
                       <span className="text-[10px] text-slate-400 mt-1">
-                        Active credential terminals
+                        {employees.filter(e => e.role === "employee" && e.isOnBreak).length} currently on break
                       </span>
                     </div>
 
@@ -729,6 +852,69 @@ export default function App() {
                           </p>
                         </div>
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Real-time Field Technicians Shifts Panel */}
+                  <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
+                    <div className="p-4 border-b border-slate-100 bg-slate-50/70 flex justify-between items-center">
+                      <h4 className="font-sans font-bold text-slate-700 m-0 text-xs uppercase tracking-wider flex items-center gap-2">
+                        <Users className="w-4 h-4 text-indigo-500" />
+                        <span>Field Technicians Real-Time Shifts ({employees.filter(e => e.role === "employee" && e.isOnline).length} Online)</span>
+                      </h4>
+                      <span className="text-[10px] font-mono text-slate-400 uppercase">Live Shifts</span>
+                    </div>
+                    <div className="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      {employees.filter(e => e.role === "employee").length === 0 ? (
+                        <div className="col-span-full py-6 text-center text-xs text-slate-400 italic">No field technicians registered in the catalog.</div>
+                      ) : (
+                        employees.filter(e => e.role === "employee").map(emp => {
+                          const isOnline = emp.isOnline;
+                          const isOnBreak = emp.isOnBreak;
+                          return (
+                            <div key={emp.uid} className="p-3 border border-slate-150 rounded-lg flex items-center justify-between bg-slate-50/50 hover:bg-slate-50 transition-colors">
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <div className="relative shrink-0">
+                                  {emp.photoURL ? (
+                                    <img
+                                      src={emp.photoURL}
+                                      alt={emp.fullName}
+                                      referrerPolicy="no-referrer"
+                                      className="w-8 h-8 rounded-full object-cover border border-slate-200"
+                                    />
+                                  ) : (
+                                    <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center font-bold text-xs uppercase font-sans">
+                                      {emp.fullName.slice(0, 2)}
+                                    </div>
+                                  )}
+                                  <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
+                                    isOnBreak ? "bg-amber-500 animate-pulse" : (isOnline ? "bg-emerald-500 animate-pulse" : "bg-slate-300")
+                                  }`} title={isOnBreak ? "On Break" : (isOnline ? "Online" : "Offline")}></span>
+                                </div>
+                                <div className="min-w-0">
+                                  <span className="block font-sans text-xs font-bold text-slate-800 truncate">{emp.fullName}</span>
+                                  <span className="block font-sans text-[10px] text-slate-400 truncate">{emp.email}</span>
+                                </div>
+                              </div>
+                              <div className="text-right ml-2 shrink-0">
+                                {isOnBreak ? (
+                                  <span className="inline-block px-2 py-0.5 text-[8px] uppercase font-mono font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded">
+                                    On Break ☕
+                                  </span>
+                                ) : isOnline ? (
+                                  <span className="inline-block px-2 py-0.5 text-[8px] uppercase font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded">
+                                    Online 🟢
+                                  </span>
+                                ) : (
+                                  <span className="inline-block px-2 py-0.5 text-[8px] uppercase font-mono font-bold text-slate-500 bg-slate-100 border border-slate-200 rounded">
+                                    Offline ⚪
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
                     </div>
                   </div>
                 </div>

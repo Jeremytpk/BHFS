@@ -21,6 +21,9 @@ export interface Employee {
   rawPassword?: string; // Stored securely in profile metadata for simulated direct login
   status?: "active" | "pending";
   photoURL?: string;
+  isOnline?: boolean;
+  isOnBreak?: boolean;
+  breakStartedAt?: string;
 }
 
 export interface Job {

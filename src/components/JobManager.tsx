@@ -15,7 +15,7 @@ import {
   Trash2
 } from "lucide-react";
 import { Job, Employee, Branch, TicketComment, calculateDeductions } from "../types";
-import { createJob, updateJobStatus, addJobComment, subscribeJobComments, deleteJob } from "../lib/dataService";
+import { createJob, updateJobStatus, addJobComment, subscribeJobComments, deleteJob, reassignJob } from "../lib/dataService";
 
 interface JobManagerProps {
   jobs: Job[];
@@ -49,6 +49,7 @@ export default function JobManager({ jobs, employees, branches, currentUser, onR
   const [techHoursVal, setTechHoursVal] = useState<number>(1);
   const [updatingStatusFlag, setUpdatingStatusFlag] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isReassigning, setIsReassigning] = useState(false);
 
   // Status Filter State
   const [filterStatus, setFilterStatus] = useState<string>("all");
@@ -558,6 +559,72 @@ export default function JobManager({ jobs, employees, branches, currentUser, onR
                 <p className="font-sans text-sm text-slate-700 leading-relaxed m-0 whitespace-pre-wrap">
                   {selectedJob.description}
                 </p>
+              </div>
+
+              {/* Technician Assignment Section */}
+              <div className="bg-slate-50/70 p-4 border border-slate-200 rounded-xl space-y-3">
+                <h5 className="font-sans font-bold text-xs text-slate-400 uppercase tracking-wider m-0">
+                  Technician Assignment
+                </h5>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 shrink-0">
+                      <User className="w-4 h-4 text-slate-500" />
+                    </div>
+                    <div>
+                      <span className="block text-[11px] text-slate-400 font-semibold leading-none mb-1">Assigned Technician</span>
+                      <span className="font-sans text-sm text-slate-800 font-extrabold block">
+                        {selectedJob.assignedTechName || "Unassigned / Standby"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {isAdmin ? (
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={selectedJob.assignedTechId || "unassigned"}
+                        onChange={async (e) => {
+                          const newTechId = e.target.value;
+                          const matchingTech = employees.find(emp => emp.uid === newTechId);
+                          const newTechName = matchingTech ? matchingTech.fullName : "Unassigned";
+                          
+                          try {
+                            setIsReassigning(true);
+                            await reassignJob(selectedJob.id, newTechId, newTechName, {
+                              uid: currentUser.uid,
+                              fullName: currentUser.fullName
+                            });
+                            setSuccessMsg(`Ticket reassigned to ${newTechName}!`);
+                            setTimeout(() => setSuccessMsg(""), 3000);
+                          } catch (err: any) {
+                            setErrorMsg(err.message || "Failed to reassign job.");
+                            setTimeout(() => setErrorMsg(""), 3500);
+                          } finally {
+                            setIsReassigning(false);
+                          }
+                        }}
+                        disabled={isReassigning}
+                        className="px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-700 min-w-[200px]"
+                      >
+                        <option value="unassigned">-- Unassigned / Standby --</option>
+                        {employees
+                          .filter((emp) => emp.role === "employee")
+                          .map((emp) => (
+                            <option key={emp.uid} value={emp.uid}>
+                              {emp.fullName}
+                            </option>
+                          ))}
+                      </select>
+                      {isReassigning && <Loader2 className="w-4 h-4 text-indigo-600 animate-spin" />}
+                    </div>
+                  ) : (
+                    <div className="text-right">
+                      <span className="inline-block px-2.5 py-1 text-[10px] uppercase font-bold tracking-wider font-mono border border-slate-200 text-slate-500 bg-slate-100 rounded-lg">
+                        Assignment Locked
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Status and Action Controls Section */}
