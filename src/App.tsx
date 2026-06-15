@@ -75,8 +75,18 @@ export default function App() {
       }
 
       // 2. Fetch static/reference collections
-      const bList = await fetchBranches();
-      const eList = await fetchEmployees();
+      let bList: Branch[] = [];
+      let eList: Employee[] = [];
+      try {
+        bList = await fetchBranches();
+      } catch (err) {
+        console.warn("Could not load branches reference catalog on boot:", err);
+      }
+      try {
+        eList = await fetchEmployees();
+      } catch (err) {
+        console.warn("Could not load employees reference catalog on boot:", err);
+      }
       setBranches(bList);
       setEmployees(eList);
 
@@ -120,11 +130,12 @@ export default function App() {
 
   // Subscribe to real-time jobs ticket list for instant notification sync
   useEffect(() => {
+    if (!currentUser) return;
     const unsub = subscribeJobs((freshJobs) => {
       setJobs(freshJobs);
     });
     return () => unsub();
-  }, []);
+  }, [currentUser]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -266,7 +277,7 @@ export default function App() {
           <div className="absolute inset-0 border-[3px] border-indigo-500/10 border-t-indigo-500 rounded-full animate-spin"></div>
         </div>
         <div className="text-center">
-          <h3 className="font-bold text-lg m-0 text-white">Bora Holding Full System (BHFS)</h3>
+          <h3 className="font-bold text-lg m-0 text-white">Leta Technologies System</h3>
           <p className="text-xs text-slate-400 mt-1 font-mono">Syncing Cloud Collections & Regional Georgia Assets...</p>
         </div>
       </div>
@@ -286,7 +297,7 @@ export default function App() {
             </div>
             <div>
               <h1 className="font-extrabold text-xl font-sans tracking-tight text-white leading-none">
-                Bora Holding Corp
+                Leta Technologies LLC
               </h1>
               <span className="font-mono text-[9px] text-slate-400 uppercase tracking-widest block mt-1">
                 Atlanta GA, USA
@@ -300,7 +311,7 @@ export default function App() {
               A Complete System for IT Operations & Technician Dispatch
             </h2>
             <p className="text-sm text-slate-400 leading-relaxed">
-              BHFS securely synchronizes coordinates between headquarters and onsite technician teams, managing regional branch offices, credentials, active chat rooms, ticket comments, and automatic Georgia state income tax payroll.
+              The dashboard securely synchronizes coordinates between headquarters and onsite technician teams, managing regional branch offices, credentials, active chat rooms, ticket comments, and automatic Georgia state income tax payroll.
             </p>
           </div>
 
@@ -551,7 +562,7 @@ export default function App() {
           {/* Top Header Bar */}
           <header className="h-14 border-b border-slate-200 bg-white flex items-center justify-between px-6 flex-none shadow-xs">
             <div className="flex items-center gap-3">
-              <h2 className="text-sm font-bold text-slate-800 tracking-tight">Bora Holding Admin Hub</h2>
+              <h2 className="text-sm font-bold text-slate-800 tracking-tight">Leta Technologies Admin Hub</h2>
               <div className="h-3.5 w-px bg-slate-200"></div>
               <span className="text-xs text-slate-500">
                 Active Branch: <span className="font-semibold text-slate-700">

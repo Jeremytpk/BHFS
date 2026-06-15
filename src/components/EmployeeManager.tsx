@@ -42,7 +42,7 @@ export default function EmployeeManager({ employees, branches, onRefresh }: Empl
     }
 
     if (employees.some((emp) => emp.email.toLowerCase() === email.trim().toLowerCase())) {
-      setErrorMsg("An employee with this email already exists in Leta/Bora registry.");
+      setErrorMsg("An employee with this email already exists in the Leta Technologies LLC registry.");
       return;
     }
 

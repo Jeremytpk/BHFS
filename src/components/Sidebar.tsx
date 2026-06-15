@@ -23,7 +23,7 @@ export default function Sidebar({ currentTab, setCurrentTab, currentUser, onLogo
   const navigationItems = [
     {
       id: "dashboard",
-      label: "Bora Holding Overview",
+      label: "Leta Technologies Overview",
       icon: Building2,
       hidden: !isAdmin, // Only sup_admin can see holding overview/branches
     },
@@ -74,10 +74,10 @@ export default function Sidebar({ currentTab, setCurrentTab, currentUser, onLogo
         </div>
         <div>
           <h1 className="font-sans font-extrabold text-sm tracking-tight text-white m-0">
-            Bora Holding
+            Leta Technologies
           </h1>
-          <p className="font-mono text-[9px] text-slate-400 font-bold tracking-widest uppercase m-0">
-            Full System BHFS
+          <p className="font-mono text-[9px] text-indigo-400 font-bold tracking-widest uppercase m-0">
+            Full System LTFS
           </p>
         </div>
       </div>

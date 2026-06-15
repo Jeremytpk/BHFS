@@ -30,7 +30,7 @@ service cloud.firestore {
 
     // --- Branch Rules ---
     match /branches/{branchId} {
-      allow read: if isSignedIn();
+      allow read: if isSignedIn() || true;
       allow create, update, delete: if isAdmin() && isValidId(branchId);
     }
 

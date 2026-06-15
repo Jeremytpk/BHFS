@@ -83,7 +83,7 @@ export default function BranchManager({ branches, onRefresh }: BranchManagerProp
             Regional Branch Network
           </h2>
           <p className="font-sans text-[11px] text-slate-400 m-0 mt-0.5">
-            Identify, allocate, and monitor regional service units and subsidiaries under Bora Holding.
+            Identify, allocate, and monitor regional service units and offices under Leta Technologies LLC.
           </p>
         </div>
 

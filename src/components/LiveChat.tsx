@@ -56,7 +56,7 @@ export default function LiveChat({ currentUser }: LiveChatProps) {
           <div>
             <h4 className="font-sans font-bold text-slate-900 m-0">Team Coordination Live Channel</h4>
             <p className="font-sans text-xs text-slate-400 mt-0.5">
-              Live coordinator channel between Bora Holding administrators and Leta Technologies onsite technicians.
+              Live coordinator channel between Leta Technologies LLC administrators and onsite technicians.
             </p>
           </div>
         </div>

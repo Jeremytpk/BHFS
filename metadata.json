@@ -1,6 +1,6 @@
 {
-  "name": "Bora Holding Full System (BHFS)",
-  "description": "Enterprise resource planning, branch network coordinator, technician service ticket dispatcher, live staff chat portal, and autocalculated Georgia tax payroll ledger system of Bora Holding and its Leta Technologies LLC subsidiary.",
+  "name": "Leta Technologies LLC",
+  "description": "Enterprise resource planning, branch network coordinator, technician service ticket dispatcher, live staff chat portal, and autocalculated Georgia tax payroll ledger system of Leta Technologies LLC.",
   "requestFramePermissions": [
     "camera"
   ],

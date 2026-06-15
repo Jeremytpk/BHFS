@@ -206,11 +206,11 @@ export default function PaystubManager({ currentUser }: PaystubManagerProps) {
                 <div className="flex items-center justify-center gap-2 mb-1">
                   <span className="w-2.5 h-2.5 rounded-full bg-indigo-600" />
                   <h3 className="font-sans font-extrabold text-slate-900 tracking-tight text-lg m-0 uppercase">
-                    Bora Holding Corp
+                    Leta Technologies LLC
                   </h3>
                 </div>
                 <p className="font-mono text-[9px] text-slate-400 tracking-wider uppercase mt-0.5 m-0 mb-3">
-                  Atlanta GA, USA - Subsidiary Leta Technologies LLC
+                  Atlanta GA, USA
                 </p>
                 <span className="font-sans text-[10px] text-slate-500 block">
                   Official Statement of Compensation / Earnings Statement
