@@ -467,8 +467,18 @@ export async function approvePaystub(stubId: string): Promise<void> {
   }
 }
 
-export function subscribePaystubs(callback: (stubs: Paystub[]) => void): Unsubscribe {
-  const q = query(collection(db, PAYSTUBS_COL), orderBy("payDate", "desc"));
+export function subscribePaystubs(
+  callback: (stubs: Paystub[]) => void,
+  employeeId?: string,
+  isAdmin?: boolean
+): Unsubscribe {
+  let q;
+  if (isAdmin || !employeeId) {
+    q = query(collection(db, PAYSTUBS_COL), orderBy("payDate", "desc"));
+  } else {
+    q = query(collection(db, PAYSTUBS_COL), where("employeeId", "==", employeeId));
+  }
+
   return onSnapshot(
     q,
     (snapshot) => {
@@ -476,6 +486,8 @@ export function subscribePaystubs(callback: (stubs: Paystub[]) => void): Unsubsc
       snapshot.forEach((doc) => {
         list.push(doc.data() as Paystub);
       });
+      // Sort desc by payDate in memory so we don't need composite indexes on Firestore side
+      list.sort((a, b) => new Date(b.payDate).getTime() - new Date(a.payDate).getTime());
       callback(list);
     },
     (error) => {

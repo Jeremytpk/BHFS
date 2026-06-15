@@ -26,11 +26,15 @@ export default function PaystubManager({ currentUser }: PaystubManagerProps) {
 
   // Watch real-time paystub updates
   useEffect(() => {
-    const unsub = subscribePaystubs((stubs) => {
-      setPaystubs(stubs);
-    });
+    const unsub = subscribePaystubs(
+      (stubs) => {
+        setPaystubs(stubs);
+      },
+      currentUser.uid,
+      isAdmin
+    );
     return () => unsub();
-  }, []);
+  }, [currentUser.uid, isAdmin]);
 
   // Filtered paystubs based on user role
   const viewablePaystubs = paystubs.filter((stub) => {
