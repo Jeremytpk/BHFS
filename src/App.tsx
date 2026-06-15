@@ -424,7 +424,7 @@ export default function App() {
             >
               <div className="text-center space-y-1">
                 <span className="inline-block font-mono text-[9px] text-cyan-400 font-bold uppercase tracking-widest px-2.5 py-0.5 bg-cyan-950 rounded-full">
-                  BHFS Portal Access
+                  Leta Technologies Portal
                 </span>
                 <h3 className="font-sans font-bold text-xl text-white m-0 pt-2">
                   Authorized Login
@@ -499,33 +499,7 @@ export default function App() {
                 </button>
               </div>
 
-              {/* QUICK PRE-LOAD PICKER FOR REVIEWERS */}
-              <div className="pt-4 border-t border-slate-800/80">
-                <h5 className="font-mono text-[9px] text-slate-500 font-bold uppercase tracking-widest text-center mb-2.5 m-0">
-                  ⭐ QUICK DEV ACCESS SWITCH (TESTING CLUES)
-                </h5>
-                <div className="space-y-1.5">
-                  {employees.map((emp) => (
-                    <button
-                      key={emp.uid}
-                      type="button"
-                      onClick={() => {
-                        setLoginEmail(emp.email);
-                        setLoginPassword(emp.rawPassword || "leta123password");
-                      }}
-                      className="w-full text-left p-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl flex items-center justify-between text-[11px] transition-colors cursor-pointer group"
-                    >
-                      <div>
-                        <span className="font-semibold text-slate-300 block leading-tight">{emp.fullName}</span>
-                        <span className="font-mono text-slate-500">{emp.email}</span>
-                      </div>
-                      <span className="font-mono bg-indigo-950 border border-indigo-900 px-2 py-0.5 rounded text-[8px] uppercase text-indigo-400 font-semibold group-hover:text-indigo-300">
-                        {emp.role === "sup_admin" ? "ADMIN" : "TECH"}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+
             </form>
           )}
         </div>

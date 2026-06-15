@@ -1,4 +1,4 @@
-# Bora Holding Full System (BHFS) Security Specification
+# Leta Technologies System Security Specification
 
 This document defines the zero-trust security rules and the "Dirty Dozen" vulnerability payloads that must be rejected by the system.
 

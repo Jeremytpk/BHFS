@@ -25,7 +25,7 @@ export default function DeveloperConsole({ employees, currentUser, onSetUser }: 
         </div>
         <div>
           <span className="font-sans text-[11px] font-bold text-slate-300 block tracking-tight">
-            BHFS Evaluation & Testing Control Deck
+            Leta Technologies Evaluation & Testing Control Deck
           </span>
           <span className="font-sans text-[10px] text-slate-500 block leading-tight">
             Toggle credentialed GA on-site contractors to inspect workspace layouts instantly.
