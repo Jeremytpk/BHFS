@@ -1,0 +1,92 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global safety net - Deny all by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Core Helper Functions ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        (request.auth.token.email == "jeremytopaka@gmail.com" || request.auth.token.email == "jey26@gmail.com" || request.auth.token.email == "admin@letatech.com") ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        (exists(/databases/$(database)/documents/employees/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/employees/$(request.auth.uid)).data.role == "sup_admin")
+      );
+    }
+
+    function isOwner(ownerId) {
+      return isSignedIn() && request.auth.uid == ownerId;
+    }
+
+    // --- Branch Rules ---
+    match /branches/{branchId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin() && isValidId(branchId);
+    }
+
+    // --- Employee Rules ---
+    match /employees/{employeeId} {
+      allow read: if isSignedIn() || true;
+      // Admins or self-registering users can create employee records
+      allow create: if isValidId(employeeId);
+      allow delete: if isAdmin() && isValidId(employeeId);
+      allow update: if (isAdmin() || (isOwner(employeeId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(["role", "hourlyRate"]))) && isValidId(employeeId);
+    }
+
+    // --- Users Rules ---
+    match /users/{userId} {
+      allow read: if isSignedIn() || true;
+      allow create: if isValidId(userId);
+      allow delete: if isAdmin() && isValidId(userId);
+      allow update: if (isAdmin() || isOwner(userId)) && isValidId(userId);
+    }
+
+    // --- Job Ticket Rules ---
+    match /jobs/{jobId} {
+      allow read: if isSignedIn();
+      // Only admin can create or delete tickets
+      allow create, delete: if isAdmin() && isValidId(jobId);
+      // Admin can update all; assigned technician can update state fields (status, loggedHours, etc.)
+      allow update: if (
+        isAdmin() || 
+        (isSignedIn() && 
+         resource.data.assignedTechId == request.auth.uid && 
+         !request.resource.data.diff(resource.data).affectedKeys().hasAny(["branchId", "id", "clientName", "payType", "payRate"]))
+      ) && isValidId(jobId);
+    }
+
+    // --- Ticket Comments Rules ---
+    match /jobs/{jobId}/comments/{commentId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && 
+                       isValidId(jobId) && isValidId(commentId) && 
+                       (request.resource.data.authorId == request.auth.uid || isAdmin()) && 
+                       exists(/databases/$(database)/documents/jobs/$(jobId));
+      allow update, delete: if (isAdmin() || (isSignedIn() && resource.data.authorId == request.auth.uid)) && isValidId(commentId);
+    }
+
+    // --- Live Chats Rules ---
+    match /chats/{chatId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(chatId) && (request.resource.data.senderId == request.auth.uid || isAdmin());
+      allow update, delete: if (isAdmin() || (isSignedIn() && resource.data.senderId == request.auth.uid)) && isValidId(chatId);
+    }
+
+    // --- Paystub Rules ---
+    match /paystubs/{paystubId} {
+      // Admins see all, employees can read their own paystubs
+      allow read: if isSignedIn() && (isAdmin() || resource.data.employeeId == request.auth.uid);
+      allow create, update, delete: if isAdmin() && isValidId(paystubId);
+    }
+  }
+}
