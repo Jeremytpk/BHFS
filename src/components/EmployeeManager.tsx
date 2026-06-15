@@ -41,9 +41,6 @@ export default function EmployeeManager({ employees, branches, onRefresh }: Empl
       return;
     }
 
-    // Basic unique UID generator derived from names/emails in seed or simple string
-    const generatedUid = "user-" + email.trim().toLowerCase().split("@")[0].replace(/[^a-z0-9]/g, "");
-
     if (employees.some((emp) => emp.email.toLowerCase() === email.trim().toLowerCase())) {
       setErrorMsg("An employee with this email already exists in Leta/Bora registry.");
       return;
@@ -53,8 +50,34 @@ export default function EmployeeManager({ employees, branches, onRefresh }: Empl
       setIsSubmitting(true);
       setErrorMsg("");
 
+      // Establish transient temporary secondary Firebase App registration to create credentials
+      // without interrupting the active admin login session.
+      const { initializeApp, getApp, deleteApp } = await import("firebase/app");
+      const { getAuth, createUserWithEmailAndPassword, signOut } = await import("firebase/auth");
+      const tempConfig = await import("../../firebase-applet-config.json");
+
+      let tempApp;
+      try {
+        tempApp = initializeApp(tempConfig.default || tempConfig, "tempAdminEmployeeCreatorApp");
+      } catch (appErr) {
+        tempApp = getApp("tempAdminEmployeeCreatorApp");
+      }
+      const tempAuth = getAuth(tempApp);
+
+      const userCred = await createUserWithEmailAndPassword(
+        tempAuth,
+        email.trim().toLowerCase(),
+        password.trim()
+      );
+
+      const firebaseUid = userCred.user.uid;
+
+      // Clean up the temporary application instances
+      await signOut(tempAuth);
+      await deleteApp(tempApp);
+
       await createEmployee({
-        uid: generatedUid,
+        uid: firebaseUid,
         email: email.trim().toLowerCase(),
         fullName: fullName.trim(),
         branchId,
