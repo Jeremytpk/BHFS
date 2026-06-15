@@ -34,7 +34,7 @@ export default function PaystubManager({ currentUser }: PaystubManagerProps) {
 
   // Filtered paystubs based on user role
   const viewablePaystubs = paystubs.filter((stub) => {
-    return isAdmin ? true : stub.employeeId === currentUser.uid;
+    return isAdmin ? true : (stub.employeeId === currentUser.uid && stub.status === "processed");
   });
 
   const handleProcessStub = async (stubId: string) => {
@@ -143,7 +143,9 @@ export default function PaystubManager({ currentUser }: PaystubManagerProps) {
                 {viewablePaystubs.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="text-center p-8 text-slate-400 italic font-sans">
-                      No active payroll records. Complete an assigned hourly work ticket.
+                      {isAdmin
+                        ? "No active payroll records. Complete an assigned hourly work ticket."
+                        : "No approved payroll disbursements yet. Your paystubs will appear here once approved by the administrator."}
                     </td>
                   </tr>
                 ) : (

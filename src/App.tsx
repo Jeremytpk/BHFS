@@ -12,7 +12,8 @@ import {
   Clock, 
   Calculator, 
   Wrench,
-  AlertCircle
+  AlertCircle,
+  Menu
 } from "lucide-react";
 import { Employee, Branch, Job } from "./types";
 import { getDocs, collection } from "firebase/firestore";
@@ -47,6 +48,7 @@ export default function App() {
   const [currentTab, setCurrentTab] = useState<string>("dashboard");
   const [loading, setLoading] = useState(true);
   const [hasUnreadChat, setHasUnreadChat] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Login Form States
   const [loginEmail, setLoginEmail] = useState("");
@@ -662,18 +664,29 @@ export default function App() {
           setCurrentTab={setCurrentTab} 
           currentUser={currentUser} 
           hasUnreadChat={hasUnreadChat}
+          isOpen={mobileSidebarOpen}
+          onClose={() => setMobileSidebarOpen(false)}
           onLogout={handleLogout} 
         />
 
         {/* Right Hand Pane wrapping Header and content */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Top Header Bar */}
-          <header className="h-14 border-b border-slate-200 bg-white flex items-center justify-between px-6 flex-none shadow-xs">
-            <div className="flex items-center gap-3">
-              <h2 className="text-sm font-bold text-slate-800 tracking-tight">Leta Technologies Admin Hub</h2>
+          <header className="h-14 border-b border-slate-200 bg-white flex items-center justify-between px-4 sm:px-6 flex-none shadow-xs">
+            <div className="flex items-center gap-2">
+              {/* Mobile Sidebar Hamburger Trigger */}
+              <button
+                onClick={() => setMobileSidebarOpen(true)}
+                className="md:hidden p-1.5 -ml-1 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors"
+                aria-label="Toggle Menu"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+
+              <h2 className="text-xs sm:text-sm font-bold text-slate-800 tracking-tight truncate max-w-[100px] sm:max-w-none">Leta Admin Hub</h2>
               <div className="h-3.5 w-px bg-slate-200"></div>
-              <span className="text-xs text-slate-500">
-                Active Branch: <span className="font-semibold text-slate-700">
+              <span className="text-[10px] sm:text-xs text-slate-500 truncate max-w-[90px] sm:max-w-none">
+                Branch: <span className="font-semibold text-slate-705">
                   {branches.length > 0 ? (branches.find(b => b.id === currentUser?.branchId)?.name || branches[0].name) : "No Branch"}
                 </span>
               </span>
@@ -689,7 +702,7 @@ export default function App() {
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                           <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                         </span>
-                        On Break ☕ {currentUser.breakStartedAt ? `(Started ${new Date(currentUser.breakStartedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})` : ""}
+                        On Break ☕ <span className="hidden sm:inline">{currentUser.breakStartedAt ? `(Started ${new Date(currentUser.breakStartedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})` : ""}</span>
                       </span>
                       <button
                         id="btn-resume-work"
@@ -704,13 +717,13 @@ export default function App() {
                         }}
                         className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-bold transition-all shadow-xs cursor-pointer"
                       >
-                        Resume Work
+                        Resume
                       </button>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] font-semibold text-slate-500">
-                        Ready to Dispatch {currentUser.breakStartedAt && currentUser.breakEndedAt ? `(Last Break: ${new Date(currentUser.breakStartedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(currentUser.breakEndedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})` : ""}
+                        Ready <span className="hidden sm:inline">{currentUser.breakStartedAt && currentUser.breakEndedAt ? `(Last Break: ${new Date(currentUser.breakStartedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(currentUser.breakEndedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})` : "to Dispatch"}</span>
                       </span>
                       <button
                         id="btn-take-break"
@@ -725,7 +738,7 @@ export default function App() {
                         }}
                         className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded text-[10px] font-bold transition-all shadow-xs flex items-center gap-1 cursor-pointer"
                       >
-                        Take Break ☕
+                        Break ☕
                       </button>
                     </div>
                   )}
@@ -750,7 +763,7 @@ export default function App() {
           </header>
 
           {/* Content Body Pane right hand */}
-          <main className="flex-1 overflow-y-auto p-5 bg-slate-50">
+          <main className="flex-1 overflow-y-auto p-3.5 sm:p-5 bg-slate-50">
             <div className="max-w-7xl mx-auto space-y-5 animate-fadeIn">
               
               {/* Dashboard tab: Overview */}

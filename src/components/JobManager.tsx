@@ -399,12 +399,12 @@ export default function JobManager({ jobs, employees, branches, currentUser, onR
       )}
 
       {/* Tabs and filters */}
-      <div className="flex items-center gap-1 bg-slate-200/60 p-1 rounded-sm border border-slate-200 max-w-md">
+      <div className="flex flex-wrap items-center gap-1 bg-slate-200/60 p-1 rounded-sm border border-slate-200 w-full max-w-md md:max-w-lg">
         {["all", "pending", "onsite", "maintenance", "completed"].map((st) => (
           <button
             key={st}
             onClick={() => setFilterStatus(st)}
-            className={`flex-1 text-center py-1 px-2.5 rounded-xs text-[10px] font-bold capitalize font-sans transition-all cursor-pointer ${
+            className={`flex-1 min-w-[65px] text-center py-1 px-1.5 rounded-xs text-[10px] font-bold capitalize font-sans transition-all cursor-pointer truncate ${
               filterStatus === st
                 ? "bg-white text-indigo-700 shadow-xs border border-slate-200/40"
                 : "text-slate-500 hover:text-slate-800 hover:bg-white/30"
