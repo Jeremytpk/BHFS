@@ -28,7 +28,11 @@
         "hourlyRate": { "type": "number", "description": "Default compensation per hour worked" },
         "createdAt": { "type": "string", "format": "date-time", "description": "Profile registration time" },
         "status": { "type": "string", "enum": ["active", "pending"], "description": "Account activation status" },
-        "photoURL": { "type": "string", "description": "Base64 or URL profile image data" }
+        "photoURL": { "type": "string", "description": "Base64 or URL profile image data" },
+        "isOnline": { "type": "boolean", "description": "Real-time connection indicator" },
+        "isOnBreak": { "type": "boolean", "description": "Break state indicator" },
+        "breakStartedAt": { "type": "string", "format": "date-time", "description": "Current break starting timestamp" },
+        "breakEndedAt": { "type": "string", "format": "date-time", "description": "Most recently completed break ending timestamp" }
       },
       "required": ["uid", "email", "fullName", "branchId", "role"]
     },
@@ -54,6 +58,7 @@
         "taxFederal": { "type": "number" },
         "netPay": { "type": "number" },
         "createdAt": { "type": "string", "format": "date-time" },
+        "startedAt": { "type": "string", "format": "date-time" },
         "completedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "branchId", "clientName", "clientAddress", "description", "assignedTechId", "status", "payType", "payRate"]

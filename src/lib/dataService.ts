@@ -223,6 +223,10 @@ export async function updateJobStatus(
     const data = jobSnap.data() as Job;
     const updatePayload: Partial<Job> = { status };
 
+    if (status === "onsite") {
+      updatePayload.startedAt = data.startedAt || new Date().toISOString();
+    }
+
     if (status === "completed") {
       updatePayload.completedAt = new Date().toISOString();
     }

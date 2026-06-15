@@ -589,19 +589,31 @@ export default function EmployeeManager({ employees, branches, onRefresh }: Empl
                     </td>
 
                     <td className="px-4 py-2 text-center">
-                      {emp.isOnBreak ? (
-                        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 animate-pulse">
-                          ☕ On Break
-                        </span>
-                      ) : emp.isOnline ? (
-                        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-                          🟢 Online
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 bg-slate-50 px-2.5 py-1 rounded-full border border-slate-200">
-                          ⚪ Offline
-                        </span>
-                      )}
+                      <div className="flex flex-col items-center justify-center">
+                        {emp.isOnBreak ? (
+                          <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 animate-pulse">
+                            ☕ On Break
+                          </span>
+                        ) : emp.isOnline ? (
+                          <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                            🟢 Online
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 bg-slate-50 px-2.5 py-1 rounded-full border border-slate-200">
+                            ⚪ Offline
+                          </span>
+                        )}
+                        {(emp.isOnBreak && emp.breakStartedAt) && (
+                          <span className="text-[8px] font-mono text-amber-600 mt-1 font-bold">
+                            Started: {new Date(emp.breakStartedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        )}
+                        {(!emp.isOnBreak && emp.breakStartedAt && emp.breakEndedAt) && (
+                          <span className="text-[8px] font-mono text-slate-400 mt-1">
+                            Last Break: {new Date(emp.breakStartedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(emp.breakEndedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     <td className="px-4 py-2 text-right">

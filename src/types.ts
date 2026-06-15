@@ -24,6 +24,7 @@ export interface Employee {
   isOnline?: boolean;
   isOnBreak?: boolean;
   breakStartedAt?: string;
+  breakEndedAt?: string;
 }
 
 export interface Job {
@@ -44,6 +45,7 @@ export interface Job {
   taxFederal: number; // Federal Standard Withholding 12.00%
   netPay: number; // gross - FICA - State - Federal
   createdAt: string;
+  startedAt?: string | null;
   completedAt: string | null;
   commentsCount: number;
 }

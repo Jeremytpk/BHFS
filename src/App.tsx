@@ -625,14 +625,15 @@ export default function App() {
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                           <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                         </span>
-                        On Break ☕
+                        On Break ☕ {currentUser.breakStartedAt ? `(Started ${new Date(currentUser.breakStartedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})` : ""}
                       </span>
                       <button
                         id="btn-resume-work"
                         onClick={async () => {
                           try {
-                            await updateEmployee(currentUser.uid, { isOnBreak: false, breakStartedAt: "" });
-                            setCurrentUser(prev => prev ? { ...prev, isOnBreak: false, breakStartedAt: "" } : null);
+                            const nowStr = new Date().toISOString();
+                            await updateEmployee(currentUser.uid, { isOnBreak: false, breakEndedAt: nowStr });
+                            setCurrentUser(prev => prev ? { ...prev, isOnBreak: false, breakEndedAt: nowStr } : null);
                           } catch (e) {
                             console.error("Failed to end break", e);
                           }
@@ -644,14 +645,16 @@ export default function App() {
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-semibold text-slate-500">Ready to Dispatch</span>
+                      <span className="text-[10px] font-semibold text-slate-500">
+                        Ready to Dispatch {currentUser.breakStartedAt && currentUser.breakEndedAt ? `(Last Break: ${new Date(currentUser.breakStartedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date(currentUser.breakEndedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})` : ""}
+                      </span>
                       <button
                         id="btn-take-break"
                         onClick={async () => {
                           try {
                             const nowStr = new Date().toISOString();
-                            await updateEmployee(currentUser.uid, { isOnBreak: true, breakStartedAt: nowStr });
-                            setCurrentUser(prev => prev ? { ...prev, isOnBreak: true, breakStartedAt: nowStr } : null);
+                            await updateEmployee(currentUser.uid, { isOnBreak: true, breakStartedAt: nowStr, breakEndedAt: "" });
+                            setCurrentUser(prev => prev ? { ...prev, isOnBreak: true, breakStartedAt: nowStr, breakEndedAt: "" } : null);
                           } catch (e) {
                             console.error("Failed to start break", e);
                           }
@@ -790,9 +793,15 @@ export default function App() {
                                   </span>
                                   <span className="font-sans font-bold text-slate-800 truncate">{j.clientName}</span>
                                 </div>
-                                <span className="font-sans text-slate-400 text-[11px] block truncate">
-                                  Technician: <span className="text-slate-600 font-medium">{j.assignedTechName}</span>
-                                </span>
+                                <div className="font-sans text-slate-400 text-[11px] block truncate mt-1 bg-slate-50/50 p-1 rounded border border-slate-100">
+                                  <div>Technician: <span className="text-slate-600 font-extrabold">{j.assignedTechName}</span></div>
+                                  {j.startedAt && (
+                                    <div className="text-[9px] text-indigo-600 font-mono mt-0.5 block">
+                                      ⏱️ Start: {new Date(j.startedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                      {j.completedAt && ` | End: ${new Date(j.completedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                               <div className="flex items-center gap-3 shrink-0">
                                 <span className="font-mono font-medium text-slate-500">
@@ -894,6 +903,16 @@ export default function App() {
                                 <div className="min-w-0">
                                   <span className="block font-sans text-xs font-bold text-slate-800 truncate">{emp.fullName}</span>
                                   <span className="block font-sans text-[10px] text-slate-400 truncate">{emp.email}</span>
+                                  {emp.isOnBreak && emp.breakStartedAt && (
+                                    <span className="block text-[8px] font-mono text-amber-600 font-extrabold mt-0.5 animate-pulse">
+                                      ☕ Broke: {new Date(emp.breakStartedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                  )}
+                                  {!emp.isOnBreak && emp.breakStartedAt && emp.breakEndedAt && (
+                                    <span className="block text-[8px] font-mono text-slate-500 mt-0.5">
+                                      ⏱️ Last Break: {new Date(emp.breakStartedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(emp.breakEndedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                               <div className="text-right ml-2 shrink-0">

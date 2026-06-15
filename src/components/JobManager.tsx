@@ -458,6 +458,23 @@ export default function JobManager({ jobs, employees, branches, currentUser, onR
                     <p className="font-sans text-xs text-slate-500 leading-relaxed mt-3.5 line-clamp-2">
                       {job.description}
                     </p>
+
+                    {(job.startedAt || job.completedAt) && (
+                      <div className="mt-3.5 grid grid-cols-2 gap-3 p-2.5 bg-slate-50 border border-slate-150 rounded-lg text-[10px] font-mono text-slate-500">
+                        <div>
+                          <span className="block font-sans text-[8px] uppercase font-extrabold text-indigo-500 mb-0.5">Started (Onsite)</span>
+                          <span className="text-slate-700 font-bold">
+                            {job.startedAt ? new Date(job.startedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : "—"}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="block font-sans text-[8px] uppercase font-extrabold text-emerald-500 mb-0.5">Completed</span>
+                          <span className="text-slate-700 font-bold">
+                            {job.completedAt ? new Date(job.completedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : "—"}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div>
@@ -559,6 +576,33 @@ export default function JobManager({ jobs, employees, branches, currentUser, onR
                 <p className="font-sans text-sm text-slate-700 leading-relaxed m-0 whitespace-pre-wrap">
                   {selectedJob.description}
                 </p>
+              </div>
+
+              {/* Chronological Dispatch Signatures */}
+              <div className="bg-slate-50 p-4 border border-slate-200 rounded-xl space-y-3">
+                <h5 className="font-sans font-bold text-xs text-slate-400 uppercase tracking-wider m-0">
+                  Chronological Dispatch Signatures
+                </h5>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="bg-white p-2.5 border border-slate-150 rounded-lg">
+                    <span className="block text-[9px] text-slate-400 font-bold uppercase mb-0.5">Created At</span>
+                    <span className="font-sans text-xs text-slate-800 font-bold block">
+                      {selectedJob.createdAt ? new Date(selectedJob.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : "—"}
+                    </span>
+                  </div>
+                  <div className="bg-white p-2.5 border border-indigo-100 rounded-lg">
+                    <span className="block text-[9px] text-indigo-500 font-bold uppercase mb-0.5">Started (Onsite)</span>
+                    <span className="font-sans text-xs text-indigo-900 font-bold block">
+                      {selectedJob.startedAt ? new Date(selectedJob.startedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : "Pending Arrival"}
+                    </span>
+                  </div>
+                  <div className="bg-white p-2.5 border border-emerald-100 rounded-lg">
+                    <span className="block text-[9px] text-emerald-500 font-bold uppercase mb-0.5">Completed At</span>
+                    <span className="font-sans text-xs text-emerald-800 font-bold block animate-pulse">
+                      {selectedJob.completedAt ? new Date(selectedJob.completedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : "In Progress"}
+                    </span>
+                  </div>
+                </div>
               </div>
 
               {/* Technician Assignment Section */}
