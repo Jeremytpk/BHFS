@@ -14,10 +14,11 @@ interface SidebarProps {
   currentTab: string;
   setCurrentTab: (tab: string) => void;
   currentUser: Employee;
+  hasUnreadChat: boolean;
   onLogout: () => void;
 }
 
-export default function Sidebar({ currentTab, setCurrentTab, currentUser, onLogout }: SidebarProps) {
+export default function Sidebar({ currentTab, setCurrentTab, currentUser, hasUnreadChat, onLogout }: SidebarProps) {
   const isAdmin = currentUser.role === "sup_admin";
 
   const navigationItems = [
@@ -93,14 +94,19 @@ export default function Sidebar({ currentTab, setCurrentTab, currentUser, onLogo
             <button
               key={item.id}
               onClick={() => setCurrentTab(item.id)}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-sm font-sans text-xs font-semibold tracking-tight transition-all duration-150 outline-none cursor-pointer ${
+              className={`w-full flex items-center justify-between px-3 py-2 rounded-sm font-sans text-xs font-semibold tracking-tight transition-all duration-150 outline-none cursor-pointer ${
                 isActive
                   ? "bg-slate-800 text-cyan-400 border-l-2 border-cyan-400"
                   : "text-slate-400 hover:bg-slate-800/65 hover:text-white"
               }`}
             >
-              <Icon className={`w-4 h-4 ${isActive ? "text-cyan-400" : "text-slate-500 group-hover:text-white"}`} />
-              <span>{item.label}</span>
+              <div className="flex items-center gap-2.5 min-w-0">
+                <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-cyan-400" : "text-slate-500 group-hover:text-white"}`} />
+                <span className="truncate">{item.label}</span>
+              </div>
+              {item.id === "live-chat" && hasUnreadChat && (
+                <span className="w-2 h-2 rounded-full bg-rose-500 border border-slate-900 animate-pulse block shrink-0 ml-1.5" />
+              )}
             </button>
           );
         })}

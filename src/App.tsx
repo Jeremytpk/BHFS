@@ -25,7 +25,8 @@ import {
   subscribeJobs,
   registerUserAndEmployee,
   subscribeEmployees,
-  updateEmployee
+  updateEmployee,
+  subscribeLiveChat
 } from "./lib/dataService";
 
 import Sidebar from "./components/Sidebar";
@@ -45,6 +46,7 @@ export default function App() {
   
   const [currentTab, setCurrentTab] = useState<string>("dashboard");
   const [loading, setLoading] = useState(true);
+  const [hasUnreadChat, setHasUnreadChat] = useState(false);
 
   // Login Form States
   const [loginEmail, setLoginEmail] = useState("");
@@ -177,6 +179,67 @@ export default function App() {
       }
     }
   }, [employees, currentUser]);
+
+  // Monitor unread chat messages to show red notification dot on sidebar menu
+  useEffect(() => {
+    if (!currentUser) return;
+    
+    const unsub = subscribeLiveChat((msgs) => {
+      if (currentTab === "live-chat") {
+        setHasUnreadChat(false);
+        return;
+      }
+      
+      let anyUnread = false;
+      if (currentUser.role === "sup_admin") {
+        for (const msg of msgs) {
+          if (msg.senderRole === "employee") {
+            const techId = msg.senderId;
+            const lastViewedStr = localStorage.getItem(`lastViewedChat_${currentUser.uid}_${techId}`);
+            if (!lastViewedStr) {
+              anyUnread = true;
+              break;
+            } else {
+              const lastTime = new Date(lastViewedStr).getTime();
+              const msgTime = new Date(msg.createdAt).getTime();
+              if (msgTime > lastTime) {
+                anyUnread = true;
+                break;
+              }
+            }
+          }
+        }
+      } else {
+        const lastViewedStr = localStorage.getItem(`lastViewedChatAt_${currentUser.uid}`);
+        const lastTime = lastViewedStr ? new Date(lastViewedStr).getTime() : 0;
+        
+        for (const msg of msgs) {
+          if (msg.senderId !== currentUser.uid) {
+            const isTargeted = msg.recipientId === currentUser.uid || !msg.recipientId;
+            if (isTargeted) {
+              const msgTime = new Date(msg.createdAt).getTime();
+              if (msgTime > lastTime) {
+                anyUnread = true;
+                break;
+              }
+            }
+          }
+        }
+      }
+      setHasUnreadChat(anyUnread);
+    });
+
+    return () => unsub();
+  }, [currentUser, currentTab, employees]);
+
+  useEffect(() => {
+    if (currentTab === "live-chat" && currentUser) {
+      setHasUnreadChat(false);
+      if (currentUser.role !== "sup_admin") {
+        localStorage.setItem(`lastViewedChatAt_${currentUser.uid}`, new Date().toISOString());
+      }
+    }
+  }, [currentTab, currentUser]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -598,6 +661,7 @@ export default function App() {
           currentTab={currentTab} 
           setCurrentTab={setCurrentTab} 
           currentUser={currentUser} 
+          hasUnreadChat={hasUnreadChat}
           onLogout={handleLogout} 
         />
 
@@ -969,7 +1033,7 @@ export default function App() {
 
               {/* Live Chat View */}
               {currentTab === "live-chat" && (
-                <LiveChat currentUser={currentUser} />
+                <LiveChat currentUser={currentUser} employees={employees} />
               )}
 
               {/* Paystubs View */}

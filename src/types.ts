@@ -67,6 +67,7 @@ export interface ChatMessage {
   senderRole: UserRole;
   text: string;
   createdAt: string;
+  recipientId?: string;
 }
 
 export interface Paystub {
