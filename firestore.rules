@@ -86,7 +86,8 @@ service cloud.firestore {
     match /paystubs/{paystubId} {
       // Admins see all, employees can read their own paystubs
       allow read: if isSignedIn() && (isAdmin() || resource.data.employeeId == request.auth.uid);
-      allow create, update, delete: if isAdmin() && isValidId(paystubId);
+      allow create: if (isAdmin() || (isSignedIn() && request.resource.data.employeeId == request.auth.uid)) && isValidId(paystubId);
+      allow update, delete: if isAdmin() && isValidId(paystubId);
     }
   }
 }

@@ -43,6 +43,10 @@ export default function JobManager({ jobs, employees, branches, currentUser, onR
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [jobToDelete, setJobToDelete] = useState<Job | null>(null);
   const [activeComments, setActiveComments] = useState<TicketComment[]>([]);
+  const [statusChangeConfirm, setStatusChangeConfirm] = useState<{
+    targetStatus: Job["status"];
+    jobId: string;
+  } | null>(null);
   const [newCommentText, setNewCommentText] = useState("");
 
   // Technicians updating tasks fields
@@ -692,7 +696,7 @@ export default function JobManager({ jobs, employees, branches, currentUser, onR
                     <div className="flex items-center gap-2">
                       {selectedJob.status === "pending" && (
                         <button
-                          onClick={() => handleStatusChange("onsite")}
+                          onClick={() => setStatusChangeConfirm({ targetStatus: "onsite", jobId: selectedJob.id })}
                           className="px-4 py-2 bg-blue-600 text-white font-sans text-xs font-semibold rounded-lg hover:bg-blue-700 cursor-pointer shadow-sm"
                         >
                           Arrived Onsite
@@ -700,7 +704,7 @@ export default function JobManager({ jobs, employees, branches, currentUser, onR
                       )}
                       {selectedJob.status === "onsite" && (
                         <button
-                          onClick={() => handleStatusChange("maintenance")}
+                          onClick={() => setStatusChangeConfirm({ targetStatus: "maintenance", jobId: selectedJob.id })}
                           className="px-4 py-2 bg-purple-600 text-white font-sans text-xs font-semibold rounded-lg hover:bg-purple-700 cursor-pointer shadow-sm"
                         >
                           Perform Maintenance
@@ -722,7 +726,7 @@ export default function JobManager({ jobs, employees, branches, currentUser, onR
                             </div>
                           )}
                           <button
-                            onClick={() => handleStatusChange("completed")}
+                            onClick={() => setStatusChangeConfirm({ targetStatus: "completed", jobId: selectedJob.id })}
                             className="px-4 py-2 bg-emerald-600 text-white font-sans text-xs font-semibold rounded-lg hover:bg-emerald-700 cursor-pointer shadow-sm"
                           >
                             Mark Completed
@@ -880,6 +884,72 @@ export default function JobManager({ jobs, employees, branches, currentUser, onR
               >
                 <Trash2 className="w-3.5 h-3.5 animate-pulse" />
                 <span>Permanently Delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modern React-state-based Status Change Confirmation Modal */}
+      {statusChangeConfirm && (
+        <div id="status-change-modal" className="fixed inset-0 bg-slate-950/65 backdrop-blur-xs flex items-center justify-center z-55 p-4 animate-fadeIn">
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-2xl max-w-md w-full p-6 space-y-4 text-left">
+            <div className="flex items-start gap-3">
+              <div className="p-3 bg-indigo-50 rounded-full text-indigo-600 shrink-0">
+                <Clock className="w-6 h-6 animate-pulse" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-slate-900 tracking-tight font-sans">
+                  Confirm Status Change
+                </h3>
+                <p className="text-xs text-slate-500 leading-relaxed font-sans">
+                  Are you sure you want to change the status of service ticket <span className="font-bold text-slate-800">{statusChangeConfirm.jobId}</span> to <span className="font-extrabold text-indigo-650 uppercase font-mono">{statusChangeConfirm.targetStatus}</span>? This will log active chronological dispatch signatures.
+                </p>
+              </div>
+            </div>
+
+            {selectedJob && (
+              <div className="bg-slate-50 border border-slate-150 rounded-lg p-3 text-[11px] font-mono text-slate-600 space-y-2">
+                <div>
+                  <span className="text-slate-400 font-sans uppercase font-bold text-[9px] block">Client Name</span>
+                  <span className="text-slate-800 font-bold">{selectedJob.clientName}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200">
+                  <div>
+                    <span className="text-slate-400 font-sans uppercase font-bold text-[9px] block">Current Status</span>
+                    <span className="text-slate-700 font-bold uppercase">{selectedJob.status}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 font-sans uppercase font-bold text-[9px] block">Next Status</span>
+                    <span className="text-indigo-600 font-black uppercase">{statusChangeConfirm.targetStatus}</span>
+                  </div>
+                </div>
+                {statusChangeConfirm.targetStatus === "completed" && selectedJob.payType === "hourly" && (
+                  <div className="pt-2 border-t border-slate-200 text-slate-705 font-sans">
+                    <span className="font-bold text-amber-600">⏱️ Billing Log:</span> {techHoursVal} hour{techHoursVal !== 1 ? 's' : ''} at ${selectedJob.payRate}/hr with auto payroll compilation.
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                onClick={() => setStatusChangeConfirm(null)}
+                className="px-3.5 py-1.5 hover:bg-slate-100 text-slate-600 hover:text-slate-800 font-sans text-xs font-bold rounded-lg transition-colors border border-transparent cursor-pointer"
+                id="cancel-status-change"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  const target = statusChangeConfirm.targetStatus;
+                  setStatusChangeConfirm(null);
+                  await handleStatusChange(target);
+                }}
+                className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-sans text-xs font-bold rounded-lg transition-all shadow-xs hover:shadow-sm cursor-pointer flex items-center gap-1.5"
+                id="confirm-status-change"
+              >
+                <span>Proceed</span>
               </button>
             </div>
           </div>
