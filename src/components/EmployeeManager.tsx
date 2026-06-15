@@ -519,7 +519,7 @@ export default function EmployeeManager({ employees, branches, onRefresh }: Empl
                 <th className="px-4 py-2">Hourly Cost</th>
                 <th className="px-4 py-2">Privilege</th>
                 <th className="px-4 py-2">Status</th>
-                <th className="px-4 py-2 font-mono text-center w-28">System Passcode</th>
+                <th className="px-4 py-2 text-center w-36">Shift / Status</th>
                 <th className="px-4 py-2 text-right w-36">Actions</th>
               </tr>
             </thead>
@@ -589,10 +589,19 @@ export default function EmployeeManager({ employees, branches, onRefresh }: Empl
                     </td>
 
                     <td className="px-4 py-2 text-center">
-                      <div className="inline-flex items-center gap-1 bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-[10px] font-mono text-slate-600 mx-auto select-all">
-                        <Key className="w-3 h-3 text-slate-400" />
-                        <span className="font-bold">{emp.rawPassword || "google-auth"}</span>
-                      </div>
+                      {emp.isOnBreak ? (
+                        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 animate-pulse">
+                          ☕ On Break
+                        </span>
+                      ) : emp.isOnline ? (
+                        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                          🟢 Online
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-slate-500 bg-slate-50 px-2.5 py-1 rounded-full border border-slate-200">
+                          ⚪ Offline
+                        </span>
+                      )}
                     </td>
 
                     <td className="px-4 py-2 text-right">
